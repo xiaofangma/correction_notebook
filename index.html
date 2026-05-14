@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>错题本 A4 PDF 排版工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #e8e8e8;
+    overflow: hidden;
+}
+.app {
+    display: flex;
+    height: 100vh;
+}
+.sidebar {
+    width: 420px;
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+    padding: 20px;
+    flex-shrink: 0;
+}
+.sidebar h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+.preview-area {
+    flex: 1;
+    overflow: auto;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+}
+
+/* A4 Page */
+.a4-page {
+    width: 794px;
+    min-height: 1123px;
+    background: white;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    position: relative;
+    padding: 60px 57px 60px 95px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #000;
+    flex-shrink: 0;
+}
+
+/* Punch hole guide */
+.punch-hole {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 95px;
+    height: 133px;
+    border: 1px dashed #bbb;
+    pointer-events: none;
+    z-index: 1;
+}
+.punch-hole::after {
+    content: "打孔区";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    font-size: 10px;
+    color: #bbb;
+    letter-spacing: 2px;
+    white-space: nowrap;
+}
+.a4-page .punch-hole { left: 0; }
+
+/* Main title */
+.main-title {
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    margin-bottom: 16px;
+    letter-spacing: 12px;
+    padding-left: 12px;
+}
+
+/* Source line */
+.source-line {
+    text-align: center;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+}
+
+/* ===== Module Box ===== */
+.module-box {
+    border: 1px solid #000;
+    margin-bottom: 12px;
+    position: relative;
+    padding: 32px 10px 10px 10px;
+}
+
+/* Header badge inside box */
+.module-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    height: 26px;
+}
+.module-number {
+    background: #000;
+    color: #fff;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 3px;
+}
+.module-label {
+    margin-left: 6px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Lined handwriting area */
+.lined-area {
+    padding: 2px 0;
+}
+.line-row {
+    border-bottom: 1px dashed #bbb;
+    height: 30px;
+}
+
+/* Question image inside box */
+.question-image {
+    width: 100%;
+    object-fit: contain;
+    display: block;
+}
+
+/* Image placeholder */
+.image-placeholder {
+    width: 100%;
+    border: 2px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-size: 13px;
+    background: #fafafa;
+}
+
+/* Answer content */
+.answer-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #000;
+    padding: 2px 4px;
+}
+
+/* Similar questions inside box */
+.similar-text {
+    font-size: 12px;
+    line-height: 1.7;
+    color: #000;
+    padding: 2px 4px;
+}
+.similar-answer-inline {
+    font-size: 11px;
+    color: #555;
+    margin-top: 2px;
+    padding-left: 16px;
+}
+
+/* Grammar box */
+.grammar-box {
+    background: #fafafa;
+    padding: 10px;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+/* Footer */
+.footer {
+    position: absolute;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: #999;
+}
+
+/* ===== Form styles ===== */
+.form-group { margin-bottom: 14px; }
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: inherit;
+    background: #fafafa;
+    outline: none;
+}
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: #007aff;
+    background: #fff;
+}
+.form-group textarea {
+    min-height: 48px;
+    resize: vertical;
+    font-size: 13px;
+}
+.radio-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: normal;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 6px;
+    background: #f5f5f5;
+    border: 1px solid transparent;
+    margin-bottom: 0;
+    font-size: 12px;
+}
+.radio-group label:has(input:checked) {
+    background: #e8f0fe;
+    border-color: #007aff;
+    color: #007aff;
+}
+.radio-group input { cursor: pointer; }
+
+.upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+.upload-area:hover {
+    border-color: #007aff;
+    color: #007aff;
+}
+.upload-area img {
+    max-width: 100%;
+    max-height: 100px;
+    margin-top: 6px;
+    border-radius: 4px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: #000;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 6px;
+}
+.btn-primary:hover { background: #333; }
+.btn-primary:disabled { background: #999; cursor: not-allowed; }
+.btn-secondary {
+    width: 100%;
+    padding: 8px;
+    background: #f5f5f5;
+    color: #333;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    margin-top: 6px;
+}
+.btn-secondary:hover { background: #eaeaea; }
+
+/* ===== Question Card ===== */
+.question-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+.question-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: #f5f5f5;
+    cursor: pointer;
+    user-select: none;
+}
+.question-card-header:hover { background: #eee; }
+.question-card-title {
+    font-size: 14px;
+    font-weight: 600;
+}
+.question-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.question-card-body {
+    padding: 14px;
+    display: none;
+}
+.question-card.expanded .question-card-body {
+    display: block;
+}
+.expand-icon {
+    font-size: 12px;
+    color: #999;
+    transition: transform 0.2s;
+}
+.question-card.expanded .expand-icon {
+    transform: rotate(90deg);
+}
+
+/* Toggle switch */
+.toggle-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label {
+    font-size: 12px;
+    color: #333;
+}
+.toggle-switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.toggle-switch.active {
+    background: #007aff;
+}
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: left 0.2s;
+}
+.toggle-switch.active::after {
+    left: 18px;
+}
+
+/* Range slider */
+.range-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+.range-row label {
+    font-size: 11px;
+    color: #666;
+    width: 60px;
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+.range-row input[type="range"] {
+    flex: 1;
+    height: 4px;
+}
+.range-row span {
+    font-size: 11px;
+    color: #999;
+    width: 36px;
+    text-align: right;
+}
+
+/* Remove btn */
+.remove-btn {
+    color: #ff3b30;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 4px 8px;
+}
+.remove-btn:hover { text-decoration: underline; }
+
+/* Similar item in form */
+.similar-form-item {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    position: relative;
+}
+.similar-form-item .remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+}
+
+/* Question block in preview */
+.question-block {
+    margin-bottom: 16px;
+}
+.question-block:last-child {
+    margin-bottom: 0;
+}
+
+/* Divider between questions on same page */
+.question-divider {
+    border-top: 1.5px dashed #bbb;
+    margin: 20px 0;
+}
+
+/* Page break hint */
+.page-break-hint {
+    text-align: center;
+    color: #007aff;
+    font-size: 11px;
+    padding: 4px;
+    margin: 8px 0;
+    border-top: 1px dashed #ccc;
+    border-bottom: 1px dashed #ccc;
+}
+
+/* Global settings section */
+.global-section {
+    background: #fafafa;
+    padding: 14px;
+    border-radius: 10px;
+    margin-bottom: 16px;
+}
+.global-section h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+/* Add question button */
+.add-question-btn {
+    width: 100%;
+    padding: 14px;
+    border: 2px dashed #ccc;
+    border-radius: 10px;
+    background: #fafafa;
+    color: #666;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+}
+.add-question-btn:hover {
+    border-color: #007aff;
+    color: #007aff;
+    background: #f0f7ff;
+}
+
+/* Force new page badge */
+.force-page-badge {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 6px;
+    background: #007aff;
+    color: white;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="sidebar" id="sidebar">
+        <h2>错题本 PDF 排版</h2>
+
+        <div class="global-section">
+            <h3>全局设置</h3>
+            <div class="form-group">
+                <label>学科</label>
+                <div class="radio-group">
+                    <label><input type="radio" name="subject" value="math" checked onchange="updateGlobal()"> <span>数学</span></label>
+                    <label><input type="radio" name="subject" value="english" onchange="updateGlobal()"> <span>英语</span></label>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>试卷名称</label>
+                <input type="text" id="examName" placeholder="如：2025春季期中试卷" oninput="updateGlobal()">
+            </div>
+            <div class="form-group">
+                <label>考试日期</label>
+                <input type="date" id="examDate" oninput="updateGlobal()">
+            </div>
+        </div>
+
+        <div id="questionList"></div>
+
+        <div class="add-question-btn" onclick="addQuestion()">+ 添加题目</div>
+
+        <button class="btn-primary" id="genPdfBtn" onclick="generatePDF()" style="margin-top: 16px;">生成 PDF</button>
+    </div>
+
+    <div class="preview-area" id="previewArea">
+        <!-- Pages will be rendered here -->
+    </div>
+</div>
+
+<script>
+// ===== Data Model =====
+let globalSettings = {
+    subject: 'math',
+    examName: '',
+    examDate: ''
+};
+
+let questions = [];
+let nextId = 1;
+
+const PAGE_HEIGHT = 1123;
+const PAGE_PADDING_TOP = 60;
+const PAGE_PADDING_BOTTOM = 60;
+
+function createQuestion() {
+    return {
+        id: nextId++,
+        image: null,
+        imageHeight: 200,
+        qtype: 'choice',
+        showWrongReason: false,
+        showKeyPoint: false,
+        keyPoint: '',
+        showSimilar: false,
+        similarItems: [],
+        showGrammar: false,
+        grammarPoint: '',
+        forceNewPage: false,
+        keyPointLines: 3
+    };
+}
+
+// ===== Init =====
+function init() {
+    document.getElementById('examDate').valueAsDate = new Date();
+    updateGlobal();
+    addQuestion();
+}
+
+// ===== Global Settings =====
+function updateGlobal() {
+    globalSettings.subject = document.querySelector('input[name="subject"]:checked').value;
+    globalSettings.examName = document.getElementById('examName').value || '未命名试卷';
+    globalSettings.examDate = document.getElementById('examDate').value;
+    renderPreview();
+    renderQuestionList();
+}
+
+// ===== Question List UI =====
+function renderQuestionList() {
+    const container = document.getElementById('questionList');
+    container.innerHTML = '';
+
+    questions.forEach((q, index) => {
+        const card = document.createElement('div');
+        card.className = 'question-card expanded';
+        card.dataset.id = q.id;
+        card.innerHTML = `
+            <div class="question-card-header" onclick="toggleCard(${q.id})">
+                <div>
+                    <span class="question-card-title">题目 ${index + 1}</span>
+                    ${q.forceNewPage ? '<span class="force-page-badge">新页开始</span>' : ''}
+                </div>
+                <div class="question-card-actions">
+                    ${questions.length > 1 ? `<button class="remove-btn" onclick="event.stopPropagation();removeQuestion(${q.id})">删除</button>` : ''}
+                    <span class="expand-icon">▶</span>
+                </div>
+            </div>
+            <div class="question-card-body">
+                <div class="form-group">
+                    <label>原题图片</label>
+                    <div class="upload-area" id="upload-${q.id}" onclick="document.getElementById('file-${q.id}').click()">
+                        <div id="uploadText-${q.id}">点击上传题目图片<br><span style="font-size:11px;color:#bbb;">支持 JPG、PNG</span></div>
+                        <img id="imagePreview-${q.id}" style="display:none;max-height:100px;">
+                    </div>
+                    <input type="file" id="file-${q.id}" accept="image/*" style="display:none;" onchange="handleFile(${q.id}, this)">
+                    <div class="range-row">
+                        <label>区域高度</label>
+                        <input type="range" min="80" max="400" value="${q.imageHeight}" oninput="updateQuestion(${q.id}, 'imageHeight', parseInt(this.value)); this.nextElementSibling.textContent = this.value + 'px';">
+                        <span>${q.imageHeight}px</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>题型</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="qtype-${q.id}" value="choice" ${q.qtype === 'choice' ? 'checked' : ''} onchange="updateQuestion(${q.id}, 'qtype', this.value)"> <span>选择题</span></label>
+                        <label><input type="radio" name="qtype-${q.id}" value="fillblank" ${q.qtype === 'fillblank' ? 'checked' : ''} onchange="updateQuestion(${q.id}, 'qtype', this.value)"> <span>填空题</span></label>
+                        <label><input type="radio" name="qtype-${q.id}" value="application" ${q.qtype === 'application' ? 'checked' : ''} onchange="updateQuestion(${q.id}, 'qtype', this.value)"> <span>应用题</span></label>
+                    </div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">错因分析</span>
+                    <div class="toggle-switch ${q.showWrongReason ? 'active' : ''}" onclick="event.stopPropagation();toggleOption(${q.id}, 'showWrongReason')"></div>
+                </div>
+
+                <div class="toggle-row">
+                    <span class="toggle-label">考点分析</span>
+                    <div class="toggle-switch ${q.showKeyPoint ? 'active' : ''}" onclick="event.stopPropagation();toggleOption(${q.id}, 'showKeyPoint')"></div>
+                </div>
+                ${q.showKeyPoint ? `
+                <div class="form-group" style="margin-top:8px;">
+                    <textarea placeholder="输入考点分析..." oninput="updateQuestion(${q.id}, 'keyPoint', this.value)">${escHtml(q.keyPoint)}</textarea>
+                    <div class="range-row">
+                        <label>行数</label>
+                        <input type="range" min="1" max="6" value="${q.keyPointLines}" oninput="updateQuestion(${q.id}, 'keyPointLines', parseInt(this.value)); this.nextElementSibling.textContent = this.value + '行';">
+                        <span>${q.keyPointLines}行</span>
+                    </div>
+                </div>
+                ` : ''}
+
+                <div class="toggle-row">
+                    <span class="toggle-label">举一反三</span>
+                    <div class="toggle-switch ${q.showSimilar ? 'active' : ''}" onclick="event.stopPropagation();toggleOption(${q.id}, 'showSimilar')"></div>
+                </div>
+                ${q.showSimilar ? `
+                <div style="margin-top:8px;">
+                    <div id="similarList-${q.id}"></div>
+                    <button class="btn-secondary" onclick="event.stopPropagation();addSimilar(${q.id})">+ 添加同类题</button>
+                </div>
+                ` : ''}
+
+                ${globalSettings.subject === 'english' ? `
+                <div class="toggle-row">
+                    <span class="toggle-label">核心语法</span>
+                    <div class="toggle-switch ${q.showGrammar ? 'active' : ''}" onclick="event.stopPropagation();toggleOption(${q.id}, 'showGrammar')"></div>
+                </div>
+                ${q.showGrammar ? `
+                <div class="form-group" style="margin-top:8px;">
+                    <textarea placeholder="输入核心语法..." oninput="updateQuestion(${q.id}, 'grammarPoint', this.value)">${escHtml(q.grammarPoint)}</textarea>
+                </div>
+                ` : ''}
+                ` : ''}
+
+                <div class="toggle-row" style="margin-top:10px;border-top:1px solid #eee;padding-top:10px;">
+                    <span class="toggle-label">从新页开始</span>
+                    <div class="toggle-switch ${q.forceNewPage ? 'active' : ''}" onclick="event.stopPropagation();toggleOption(${q.id}, 'forceNewPage')"></div>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+
+        // Restore image preview
+        if (q.image) {
+            const img = document.getElementById(`imagePreview-${q.id}`);
+            const txt = document.getElementById(`uploadText-${q.id}`);
+            if (img) { img.src = q.image; img.style.display = 'block'; }
+            if (txt) txt.style.display = 'none';
+        }
+
+        // Render similar items
+        if (q.showSimilar) {
+            renderSimilarList(q);
+        }
+    });
+}
+
+function toggleCard(id) {
+    const cards = document.querySelectorAll('.question-card');
+    cards.forEach(card => {
+        if (parseInt(card.dataset.id) === id) {
+            card.classList.toggle('expanded');
+        }
+    });
+}
+
+function escHtml(text) {
+    if (!text) return '';
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function renderSimilarList(q) {
+    const container = document.getElementById(`similarList-${q.id}`);
+    if (!container) return;
+    container.innerHTML = '';
+    q.similarItems.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'similar-form-item';
+        div.innerHTML = `
+            <button class="remove-btn" onclick="event.stopPropagation();removeSimilar(${q.id}, ${idx})">删除</button>
+            <input type="text" placeholder="题目" value="${escHtml(item.question)}" style="width:100%;margin-bottom:4px;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px;" oninput="updateSimilar(${q.id}, ${idx}, 'question', this.value)">
+            <input type="text" placeholder="答案" value="${escHtml(item.answer)}" style="width:100%;padding:6px;border:1px solid #ddd;border-radius:4px;font-size:12px;" oninput="updateSimilar(${q.id}, ${idx}, 'answer', this.value)">
+        `;
+        container.appendChild(div);
+    });
+}
+
+// ===== Question Operations =====
+function addQuestion() {
+    questions.push(createQuestion());
+    renderQuestionList();
+    renderPreview();
+}
+
+function removeQuestion(id) {
+    if (questions.length <= 1) {
+        alert('至少需要保留一道题目');
+        return;
+    }
+    questions = questions.filter(q => q.id !== id);
+    renderQuestionList();
+    renderPreview();
+}
+
+function updateQuestion(id, field, value) {
+    const q = questions.find(q => q.id === id);
+    if (q) {
+        q[field] = value;
+        renderPreview();
+    }
+}
+
+function toggleOption(id, field) {
+    const q = questions.find(q => q.id === id);
+    if (q) {
+        q[field] = !q[field];
+        renderQuestionList();
+        renderPreview();
+    }
+}
+
+function handleFile(id, input) {
+    const file = input.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const q = questions.find(q => q.id === id);
+        if (q) {
+            q.image = e.target.result;
+            renderQuestionList();
+            renderPreview();
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function addSimilar(id) {
+    const q = questions.find(q => q.id === id);
+    if (q) {
+        q.similarItems.push({ question: '', answer: '' });
+        renderSimilarList(q);
+        renderPreview();
+    }
+}
+
+function removeSimilar(qid, idx) {
+    const q = questions.find(q => q.id === qid);
+    if (q) {
+        q.similarItems.splice(idx, 1);
+        renderSimilarList(q);
+        renderPreview();
+    }
+}
+
+function updateSimilar(qid, idx, field, value) {
+    const q = questions.find(q => q.id === qid);
+    if (q && q.similarItems[idx]) {
+        q.similarItems[idx][field] = value;
+        renderPreview();
+    }
+}
+
+// ===== Preview Rendering =====
+function formatDate(dateStr) {
+    if (!dateStr) {
+        const d = new Date();
+        return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+    }
+    const d = new Date(dateStr);
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+}
+
+function moduleBox(num, label, content) {
+    return `<div class="module-box">
+        <div class="module-header">
+            <div class="module-number">${num}</div>
+            <div class="module-label">${label}</div>
+        </div>
+        ${content}
+    </div>`;
+}
+
+function linedArea(lines) {
+    let html = '<div class="lined-area">';
+    for (let i = 0; i < lines; i++) {
+        html += '<div class="line-row"></div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+function renderQuestionHTML(q) {
+    let html = '<div class="question-block">';
+    let n = 1;
+
+    // 1. 原题 - always present
+    if (q.image) {
+        html += moduleBox(n++, '原题', `<img class="question-image" src="${q.image}" style="max-height:${q.imageHeight}px;">`);
+    } else {
+        html += moduleBox(n++, '原题', `<div class="image-placeholder" style="height:${q.imageHeight}px;">[题目图片区域]</div>`);
+    }
+
+    // 2. 正确答案 - always present, lined area only
+    const correctLines = (q.qtype === 'application') ? 5 : 1;
+    html += moduleBox(n++, '正确答案', linedArea(correctLines));
+
+    // 3. 错因分析 - optional
+    if (q.showWrongReason) {
+        html += moduleBox(n++, '错因分析', linedArea(1));
+    }
+
+    // 5. 考点分析 - optional
+    if (q.showKeyPoint) {
+        if (q.keyPoint) {
+            html += moduleBox(n++, '考点分析', `<div class="answer-text">${esc(q.keyPoint)}</div>`);
+        } else {
+            html += moduleBox(n++, '考点分析', linedArea(q.keyPointLines));
+        }
+    }
+
+    // 6. 举一反三 - optional
+    if (q.showSimilar && q.similarItems.length) {
+        let simHtml = '';
+        q.similarItems.forEach((item, i) => {
+            if (item.question) {
+                simHtml += `<div class="similar-text">${i+1}. ${esc(item.question)}</div>`;
+                if (item.answer) {
+                    simHtml += `<div class="similar-answer-inline">答案：${esc(item.answer)}</div>`;
+                }
+            }
+        });
+        if (simHtml) {
+            html += moduleBox(n++, '举一反三', simHtml);
+        }
+    }
+
+    // 7. 核心语法 - optional (English only)
+    if (globalSettings.subject === 'english' && q.showGrammar && q.grammarPoint) {
+        html += moduleBox(n++, '核心语法', `<div class="grammar-box">${esc(q.grammarPoint)}</div>`);
+    }
+
+    html += '</div>';
+    return html;
+}
+
+function esc(text) {
+    if (!text) return '';
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br>');
+}
+
+function renderPreview() {
+    const container = document.getElementById('previewArea');
+    container.innerHTML = '';
+
+    if (questions.length === 0) return;
+
+    const subjectLabel = globalSettings.subject === 'math' ? '数学' : '英语';
+
+    // Flow layout: render questions into pages, checking overflow
+    let currentPage = null;
+    let currentContent = null;
+    let pageCount = 0;
+
+    function createNewPage() {
+        pageCount++;
+        const page = document.createElement('div');
+        page.className = 'a4-page';
+        page.innerHTML = `
+            <div class="punch-hole"></div>
+            <div class="main-title">${subjectLabel}错题本</div>
+            <div class="source-line">${esc(globalSettings.examName)}　${formatDate(globalSettings.examDate)}</div>
+            <div class="page-content" style="position:relative;"></div>
+            <div class="footer">${pageCount}</div>
+        `;
+        container.appendChild(page);
+        currentPage = page;
+        currentContent = page.querySelector('.page-content');
+        // Dynamically calculate available content height based on rendered header
+        const sourceLine = page.querySelector('.source-line');
+        const headerBottom = sourceLine.offsetTop + sourceLine.offsetHeight;
+        page.maxContentHeight = PAGE_HEIGHT - PAGE_PADDING_TOP - PAGE_PADDING_BOTTOM - headerBottom - 50;
+        return page;
+    }
+
+    questions.forEach((q, idx) => {
+        // If force new page and we already have content on current page
+        if (q.forceNewPage && currentContent && currentContent.children.length > 0) {
+            createNewPage();
+        }
+
+        // Ensure we have a page
+        if (!currentPage) {
+            createNewPage();
+        }
+
+        // If page already has questions, add divider before this one
+        const hasExisting = currentContent.querySelector('.question-block');
+
+        // Add question to current page
+        const qHtml = renderQuestionHTML(q);
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = qHtml;
+        const qEl = tempDiv.firstChild;
+        currentContent.appendChild(qEl);
+
+        // Check if overflow using dynamically calculated max height
+        const maxH = currentPage.maxContentHeight;
+        const contentHeight = currentContent.scrollHeight;
+        if (contentHeight > maxH) {
+            // Overflow: remove from current page and start new page
+            qEl.remove();
+            createNewPage();
+            currentContent.appendChild(qEl);
+        } else if (hasExisting) {
+            // Same page has multiple questions: insert divider before this one
+            const divider = document.createElement('div');
+            divider.className = 'question-divider';
+            currentContent.insertBefore(divider, qEl);
+            // Re-check after adding divider
+            if (currentContent.scrollHeight > maxH) {
+                divider.remove();
+                qEl.remove();
+                createNewPage();
+                currentContent.appendChild(qEl);
+            }
+        }
+    });
+}
+
+// ===== PDF Generation =====
+function generatePDF() {
+    const btn = document.getElementById('genPdfBtn');
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+
+    const pages = document.querySelectorAll('.a4-page');
+    if (pages.length === 0) {
+        alert('没有内容可生成');
+        btn.disabled = false;
+        btn.textContent = '生成 PDF';
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    function processPage(idx) {
+        if (idx >= pages.length) {
+            pdf.save('错题本.pdf');
+            btn.disabled = false;
+            btn.textContent = '生成 PDF';
+            return;
+        }
+
+        html2canvas(pages[idx], {
+            scale: 2.5,
+            useCORS: true,
+            backgroundColor: '#ffffff',
+            logging: false
+        }).then(canvas => {
+            const imgData = canvas.toDataURL('image/png');
+            if (idx > 0) pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+            processPage(idx + 1);
+        }).catch(err => {
+            alert('生成失败：' + err.message);
+            btn.disabled = false;
+            btn.textContent = '生成 PDF';
+        });
+    }
+
+    processPage(0);
+}
+
+// Start
+init();
+</script>
+</body>
+</html>

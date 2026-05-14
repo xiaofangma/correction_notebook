@@ -7,7 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
     background: #e8e8e8;
@@ -104,7 +104,7 @@ body {
     border: 1px solid #000;
     margin-bottom: 12px;
     position: relative;
-    padding: 32px 10px 10px 10px;
+    padding: 32px 4px 4px 4px;
 }
 
 /* Header badge inside box */
@@ -510,6 +510,266 @@ body {
     border-radius: 4px;
     margin-left: 6px;
 }
+
+.preview-actions {
+    position: sticky;
+    bottom: 20px;
+    align-self: center;
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+.preview-actions button {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.preview-actions .btn-download {
+    background: #007aff;
+    color: white;
+}
+.preview-actions .btn-print {
+    background: #000;
+    color: white;
+}
+.preview-actions button:disabled {
+    background: #999;
+    cursor: not-allowed;
+}
+
+/* ===== PDF Modal ===== */
+.pdf-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #333;
+    z-index: 1000;
+    flex-direction: column;
+}
+.pdf-modal-toolbar {
+    height: 52px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    border-bottom: 1px solid #e0e0e0;
+    flex-shrink: 0;
+}
+.pdf-modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+.pdf-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+.pdf-modal-actions button {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.pdf-modal-actions button:not(.close) {
+    background: #007aff;
+    color: white;
+}
+.pdf-modal-actions button.close {
+    background: #f5f5f5;
+    color: #333;
+}
+.pdf-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    background: #525659;
+}
+.pdf-modal-content img {
+    max-width: 100%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    background: white;
+}
+
+/* ===== Mobile Tab Bar ===== */
+.mobile-tab-bar {
+    display: none;
+}
+
+/* ===== Mobile Responsive ===== */
+@media (max-width: 768px) {
+    body {
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+    .app {
+        flex-direction: column;
+        height: 100vh;
+        height: 100dvh;
+    }
+    .sidebar {
+        width: 100%;
+        max-height: none;
+        border-right: none;
+        padding: 16px;
+        flex: 1;
+        overflow-y: auto;
+        padding-bottom: 80px;
+        display: none;
+    }
+    .sidebar.active {
+        display: block;
+    }
+    .sidebar h2 {
+        font-size: 18px;
+    }
+    .preview-area {
+        display: none;
+        padding: 16px;
+        flex-direction: column;
+        align-items: center;
+        overflow: auto;
+        flex: 1;
+        -webkit-overflow-scrolling: touch;
+        background: #d0d0d0;
+    }
+    .preview-area.active {
+        display: flex;
+    }
+    .a4-page {
+        width: 794px;
+        min-height: 1123px;
+        padding: 60px 57px 60px 95px;
+        transform-origin: top center;
+        transform: scale(0.45);
+        margin-bottom: -600px;
+        flex-shrink: 0;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="date"],
+    .form-group textarea,
+    .form-group select {
+        font-size: 16px;
+        padding: 10px 12px;
+    }
+    .btn-primary, .add-question-btn, .btn-secondary {
+        padding: 14px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+    .radio-group label {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    .toggle-switch {
+        width: 44px;
+        height: 24px;
+    }
+    .toggle-switch::after {
+        width: 20px;
+        height: 20px;
+    }
+    .toggle-switch.active::after {
+        left: 22px;
+    }
+    .upload-area {
+        padding: 20px;
+    }
+    .question-card-header {
+        padding: 12px 14px;
+    }
+    .question-card-title {
+        font-size: 16px;
+    }
+    .remove-btn {
+        padding: 6px 10px;
+        font-size: 14px;
+    }
+    .range-row input[type="range"] {
+        height: 6px;
+    }
+    .mobile-tab-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        background: #fff;
+        border-top: 1px solid #e0e0e0;
+        z-index: 100;
+    }
+    .mobile-tab-bar button {
+        flex: 1;
+        border: none;
+        background: none;
+        font-size: 14px;
+        font-weight: 600;
+        color: #999;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .mobile-tab-bar button.active {
+        color: #007aff;
+    }
+    .preview-actions {
+        gap: 8px;
+        margin-bottom: 80px;
+    }
+    .preview-actions button {
+        padding: 14px 24px;
+        font-size: 16px;
+        min-height: 48px;
+    }
+}
+
+/* ===== Print styles ===== */
+@media print {
+    body { background: white !important; overflow: visible !important; }
+    .app { display: block !important; height: auto !important; }
+    .sidebar, .mobile-tab-bar, .pdf-modal, .preview-actions {
+        display: none !important;
+    }
+    .preview-area {
+        display: block !important;
+        padding: 0 !important;
+        background: white !important;
+        overflow: visible !important;
+        align-items: flex-start !important;
+    }
+    .a4-page {
+        transform: none !important;
+        margin: 0 !important;
+        margin-bottom: 0 !important;
+        box-shadow: none !important;
+        page-break-after: always;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        padding: 15mm 12mm 15mm 22mm !important;
+    }
+    .a4-page:last-child {
+        page-break-after: auto;
+    }
+}
 </style>
 </head>
 <body>
@@ -544,8 +804,33 @@ body {
     </div>
 
     <div class="preview-area" id="previewArea">
-        <!-- Pages will be rendered here -->
+        <div id="pagesContainer" style="display:flex;flex-direction:column;align-items:center;gap:30px;"></div>
+        <div class="preview-actions" id="previewActions">
+            <button class="btn-download" id="downloadBtn" onclick="downloadPDF()">下载</button>
+            <button class="btn-print" id="printBtn" onclick="printPDF()">打印预览</button>
+        </div>
     </div>
+
+    <div class="mobile-tab-bar" id="mobileTabBar">
+        <button class="active" onclick="switchTab('edit')" id="tab-edit">
+            <span>编辑</span>
+        </button>
+        <button onclick="switchTab('preview')" id="tab-preview">
+            <span>预览</span>
+        </button>
+    </div>
+</div>
+
+<div class="pdf-modal" id="pdfModal">
+    <div class="pdf-modal-toolbar">
+        <div class="pdf-modal-title">打印预览</div>
+        <div class="pdf-modal-actions">
+            <button id="modalDownloadBtn">下载 PDF</button>
+            <button id="modalPrintBtn">打印</button>
+            <button class="close" onclick="closePdfModal()">关闭</button>
+        </div>
+    </div>
+    <div class="pdf-modal-content" id="pdfModalContent"></div>
 </div>
 
 <script>
@@ -586,6 +871,11 @@ function init() {
     document.getElementById('examDate').valueAsDate = new Date();
     updateGlobal();
     addQuestion();
+
+    // Mobile: default to edit tab
+    if (window.innerWidth <= 768) {
+        switchTab('edit');
+    }
 }
 
 // ===== Global Settings =====
@@ -782,6 +1072,10 @@ function handleFile(id, input) {
             q.image = e.target.result;
             renderQuestionList();
             renderPreview();
+            // Mobile: auto-switch to preview tab to show image effect
+            if (window.innerWidth <= 768) {
+                switchTab('preview');
+            }
         }
     };
     reader.readAsDataURL(file);
@@ -902,7 +1196,8 @@ function esc(text) {
 }
 
 function renderPreview() {
-    const container = document.getElementById('previewArea');
+    const container = document.getElementById('pagesContainer');
+    if (!container) return;
     container.innerHTML = '';
 
     if (questions.length === 0) return;
@@ -980,50 +1275,292 @@ function renderPreview() {
     });
 }
 
+// ===== Capture A4 page =====
+function captureA4Page(pageElement) {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:0;top:0;width:794px;height:1123px;overflow:hidden;pointer-events:none;opacity:0;z-index:-1;';
+
+    const clone = pageElement.cloneNode(true);
+    clone.style.transform = 'none';
+    clone.style.margin = '0';
+    clone.style.boxShadow = 'none';
+    clone.style.height = '1123px';
+    clone.style.minHeight = '1123px';
+    clone.style.overflow = 'hidden';
+
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    return html2canvas(clone, {
+        scale: 1.5,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: 794,
+        windowHeight: 1123
+    }).then(canvas => {
+        document.body.removeChild(container);
+        return canvas;
+    }).catch(err => {
+        if (container.parentNode) document.body.removeChild(container);
+        throw err;
+    });
+}
+
 // ===== PDF Generation =====
 function generatePDF() {
     const btn = document.getElementById('genPdfBtn');
     btn.disabled = true;
     btn.textContent = '生成中...';
 
-    const pages = document.querySelectorAll('.a4-page');
-    if (pages.length === 0) {
-        alert('没有内容可生成');
-        btn.disabled = false;
-        btn.textContent = '生成 PDF';
-        return;
-    }
+    const isMobile = window.innerWidth <= 768;
+    const wasOnEditTab = isMobile && document.getElementById('sidebar').classList.contains('active');
 
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-
-    function processPage(idx) {
-        if (idx >= pages.length) {
-            pdf.save('错题本.pdf');
+    function doGenerate() {
+        const pages = document.querySelectorAll('.a4-page');
+        if (pages.length === 0) {
+            alert('没有内容可生成');
             btn.disabled = false;
             btn.textContent = '生成 PDF';
             return;
         }
 
-        html2canvas(pages[idx], {
-            scale: 2.5,
-            useCORS: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        }).then(canvas => {
-            const imgData = canvas.toDataURL('image/png');
-            if (idx > 0) pdf.addPage();
-            pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-            processPage(idx + 1);
-        }).catch(err => {
-            alert('生成失败：' + err.message);
-            btn.disabled = false;
-            btn.textContent = '生成 PDF';
-        });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        function processPage(idx) {
+            if (idx >= pages.length) {
+                pdf.save('错题本.pdf');
+                btn.disabled = false;
+                btn.textContent = '生成 PDF';
+                if (wasOnEditTab) {
+                    switchTab('edit');
+                }
+                return;
+            }
+
+            captureA4Page(pages[idx]).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                if (idx > 0) pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                processPage(idx + 1);
+            }).catch(err => {
+                alert('生成失败：' + err.message);
+                btn.disabled = false;
+                btn.textContent = '生成 PDF';
+                if (wasOnEditTab) {
+                    switchTab('edit');
+                }
+            });
+        }
+
+        processPage(0);
     }
 
-    processPage(0);
+    if (isMobile && wasOnEditTab) {
+        switchTab('preview');
+        setTimeout(doGenerate, 300);
+    } else {
+        doGenerate();
+    }
 }
+
+// ===== PDF Print =====
+// ===== Download PDF directly =====
+function downloadPDF() {
+    const btn = document.getElementById('downloadBtn');
+    const origText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = '生成中...';
+
+    const isMobile = window.innerWidth <= 768;
+    const wasOnEditTab = isMobile && document.getElementById('sidebar').classList.contains('active');
+
+    function doDownload() {
+        const pages = document.querySelectorAll('.a4-page');
+        if (pages.length === 0) {
+            alert('没有内容可下载');
+            btn.disabled = false;
+            btn.textContent = origText;
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        function finish() {
+            pdf.save('错题本.pdf');
+            btn.disabled = false;
+            btn.textContent = origText;
+            if (wasOnEditTab) {
+                switchTab('edit');
+            }
+        }
+
+        function handleError(err) {
+            alert('生成失败：' + err.message);
+            btn.disabled = false;
+            btn.textContent = origText;
+            if (wasOnEditTab) {
+                switchTab('edit');
+            }
+        }
+
+        function processPage(idx) {
+            if (idx >= pages.length) {
+                finish();
+                return;
+            }
+            captureA4Page(pages[idx]).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                if (idx > 0) pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                processPage(idx + 1);
+            }).catch(err => {
+                handleError(err);
+            });
+        }
+
+        processPage(0);
+    }
+
+    if (isMobile && wasOnEditTab) {
+        switchTab('preview');
+        setTimeout(doDownload, 300);
+    } else {
+        doDownload();
+    }
+}
+
+// ===== Print Preview Modal =====
+function printPDF() {
+    const btn = document.getElementById('printBtn');
+    btn.disabled = true;
+    btn.textContent = '准备中...';
+
+    const isMobile = window.innerWidth <= 768;
+    const wasOnEditTab = isMobile && document.getElementById('sidebar').classList.contains('active');
+
+    function doPreview() {
+        const pages = document.querySelectorAll('.a4-page');
+        if (pages.length === 0) {
+            alert('没有内容可预览');
+            btn.disabled = false;
+            btn.textContent = '打印预览';
+            return;
+        }
+
+        const capturedImages = [];
+        let currentPdf = null;
+
+        function finishAndShow() {
+            const modal = document.getElementById('pdfModal');
+            const content = document.getElementById('pdfModalContent');
+            const downloadBtn = document.getElementById('modalDownloadBtn');
+            const printBtn = document.getElementById('modalPrintBtn');
+
+            content.innerHTML = '';
+            capturedImages.forEach(imgData => {
+                const img = document.createElement('img');
+                img.src = imgData;
+                content.appendChild(img);
+            });
+
+            downloadBtn.onclick = function() {
+                if (currentPdf) {
+                    currentPdf.save('错题本.pdf');
+                }
+            };
+
+            printBtn.onclick = function() {
+                closePdfModal();
+                setTimeout(() => window.print(), 300);
+            };
+
+            modal.style.display = 'flex';
+            btn.disabled = false;
+            btn.textContent = '打印预览';
+
+            if (wasOnEditTab) {
+                switchTab('edit');
+            }
+        }
+
+        function handleError(err) {
+            alert('预览准备失败：' + err.message);
+            btn.disabled = false;
+            btn.textContent = '打印预览';
+            if (wasOnEditTab) {
+                switchTab('edit');
+            }
+        }
+
+        // Capture pages and build PDF in parallel
+        function processPage(idx) {
+            if (idx >= pages.length) {
+                finishAndShow();
+                return;
+            }
+            captureA4Page(pages[idx]).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                capturedImages.push(imgData);
+                if (idx > 0) currentPdf.addPage();
+                currentPdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+                processPage(idx + 1);
+            }).catch(err => {
+                handleError(err);
+            });
+        }
+
+        const { jsPDF } = window.jspdf;
+        currentPdf = new jsPDF('p', 'mm', 'a4');
+        processPage(0);
+    }
+
+    if (isMobile && wasOnEditTab) {
+        switchTab('preview');
+        setTimeout(doPreview, 300);
+    } else {
+        doPreview();
+    }
+}
+
+function closePdfModal() {
+    const modal = document.getElementById('pdfModal');
+    const content = document.getElementById('pdfModalContent');
+    content.innerHTML = '';
+    modal.style.display = 'none';
+}
+
+// ===== Mobile Tab Switching =====
+function switchTab(tab) {
+    const sidebar = document.getElementById('sidebar');
+    const preview = document.getElementById('previewArea');
+    const tabEdit = document.getElementById('tab-edit');
+    const tabPreview = document.getElementById('tab-preview');
+
+    if (tab === 'edit') {
+        sidebar.classList.add('active');
+        preview.classList.remove('active');
+        tabEdit.classList.add('active');
+        tabPreview.classList.remove('active');
+    } else {
+        sidebar.classList.remove('active');
+        preview.classList.add('active');
+        tabEdit.classList.remove('active');
+        tabPreview.classList.add('active');
+        // Re-render preview to ensure correct sizing
+        renderPreview();
+    }
+}
+
+// Handle window resize: clean up mobile classes when returning to desktop
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('previewArea').classList.remove('active');
+    }
+});
 
 // Start
 init();

@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>错题本 A4 PDF 排版工具</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -99,7 +102,21 @@ body {
     padding-bottom: 10px;
 }
 
-/* ===== Module Box ===== */
+/* ===== Question Wrapper (unified box for one question) ===== */
+.question-wrapper {
+    border: 1px solid #000;
+    margin-bottom: 12px;
+}
+.module-section {
+    position: relative;
+    padding: 32px 10px 10px 10px;
+}
+.module-divider {
+    border-top: 1px dashed #bbb;
+    margin: 0 10px;
+}
+
+/* ===== Module Box (standalone, for backward compat) ===== */
 .module-box {
     border: 1px solid #000;
     margin-bottom: 12px;
@@ -141,6 +158,90 @@ body {
 .line-row {
     border-bottom: 1px dashed #bbb;
     height: 30px;
+}
+
+/* Blank area without lines */
+.blank-area {
+    border: 1px solid transparent;
+    border-radius: 4px;
+    min-height: 30px;
+    position: relative;
+    box-sizing: border-box;
+}
+.blank-area:hover {
+    border-color: #ddd;
+}
+.resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 14px;
+    height: 14px;
+    cursor: ns-resize;
+    opacity: 0;
+    z-index: 2;
+}
+.blank-area:hover .resize-handle,
+.resizable-area:hover .resize-handle {
+    opacity: 1;
+    background: linear-gradient(135deg, transparent 45%, #bbb 45%, #bbb 55%, transparent 55%);
+}
+
+/* Editable textarea inside blank area */
+.editable-input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    outline: none;
+    resize: none;
+    padding: 4px 4px 16px 4px;
+    font-size: 14px;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+.editable-input.correct-color {
+    color: #d00;
+    font-weight: bold;
+}
+.editable-input.reason-color {
+    color: #06c;
+}
+
+/* Resizable area for question image */
+.resizable-area {
+    position: relative;
+    box-sizing: border-box;
+}
+.resizable-area img {
+    max-height: 100%;
+}
+
+/* Input fields for correct answer and wrong reason */
+.answer-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #ddd;
+    background: transparent;
+    font-size: 14px;
+    font-weight: bold;
+    color: #d00;
+    padding: 4px 0;
+    outline: none;
+}
+ .reason-input {
+    width: 100%;
+    border: none;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    background: transparent;
+    font-size: 14px;
+    color: #06c;
+    padding: 6px;
+    outline: none;
+    resize: vertical;
+    min-height: 60px;
+    line-height: 1.5;
 }
 
 /* Question image inside box */
@@ -510,10 +611,177 @@ body {
     border-radius: 4px;
     margin-left: 6px;
 }
+
+/* Mobile tab bar */
+.mobile-bar {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    gap: 8px;
+}
+.mobile-bar button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.mobile-bar button.active {
+    background: #007aff;
+    color: white;
+}
+.mobile-bar button:not(.active) {
+    background: #f0f0f0;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    body { overflow: auto; }
+    .app { flex-direction: column; height: auto; }
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 12px;
+    }
+    .sidebar.hidden-mobile { display: none; }
+    .preview-area {
+        padding: 10px;
+        min-height: 100vh;
+        overflow-x: auto;
+        align-items: flex-start;
+    }
+    .preview-area.hidden-mobile { display: none; }
+    .mobile-bar { display: flex; }
+    .a4-page { flex-shrink: 0; }
+}
+
+@media print {
+    body { background: white; overflow: visible; }
+    .app { display: block; height: auto; }
+    .sidebar, .sidebar.hidden-mobile, .mobile-bar, .add-question-btn, .btn-primary, .btn-secondary, .remove-btn, .print-toolbar { display: none !important; }
+    .preview-area, .preview-area.hidden-mobile {
+        display: block !important;
+        padding: 0;
+        overflow: visible;
+        align-items: flex-start;
+    }
+    .a4-page {
+        box-shadow: none;
+        margin: 0;
+        page-break-after: always;
+        zoom: 1 !important;
+    }
+    .a4-page:last-child {
+        page-break-after: auto;
+    }
+    .blank-area { border: none !important; }
+}
+
+@media (max-width: 768px) {
+    body.print-preview .preview-area {
+        padding: 10px 0 70px 0;
+        align-items: center;
+    }
+}
+
+/* Print preview mode */
+body.print-preview .sidebar,
+body.print-preview .mobile-bar .mobile-tab-btn,
+body.print-preview .add-question-btn,
+body.print-preview #genPdfBtn,
+body.print-preview .btn-secondary,
+body.print-preview .remove-btn {
+    display: none !important;
+}
+body.print-preview .app {
+    flex-direction: column;
+    height: auto;
+}
+body.print-preview .preview-area {
+    padding: 20px;
+    flex: none;
+}
+body.print-preview .blank-area {
+    border: none !important;
+}
+body.print-preview .resize-handle {
+    display: none !important;
+}
+body.print-preview .editable-input {
+    pointer-events: none;
+}
+body.print-preview .print-toolbar {
+    display: flex;
+}
+
+.print-toolbar {
+    display: none;
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    background: #fff;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 10px 20px;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+.print-toolbar button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+}
+.print-toolbar .btn-print {
+    background: #007aff;
+    color: white;
+}
+.print-toolbar .btn-exit {
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+}
+
+@media (max-width: 768px) {
+    body.print-preview .print-toolbar {
+        position: fixed;
+        bottom: 0;
+        top: auto;
+        left: 0;
+        right: 0;
+        border-bottom: none;
+        border-top: 1px solid #e0e0e0;
+        padding: 12px;
+    }
+    body.print-preview .preview-area {
+        padding: 10px 0 70px 0;
+        align-items: center;
+    }
+    .blank-area .resize-handle {
+        opacity: 1;
+        background: linear-gradient(135deg, transparent 45%, #bbb 45%, #bbb 55%, transparent 55%);
+    }
+}
 </style>
 </head>
 <body>
+<div class="print-toolbar" id="printToolbar">
+    <button class="btn-print" onclick="browserPrint()">打印</button>
+    <button class="btn-exit" onclick="exitPrintPreview()">返回修改</button>
+</div>
+
 <div class="app">
+    <div class="mobile-bar" id="mobileBar">
+        <button class="active mobile-tab-btn" onclick="switchMobileView('edit')">编辑</button>
+        <button class="mobile-tab-btn" onclick="switchMobileView('preview')">预览</button>
+    </div>
     <div class="sidebar" id="sidebar">
         <h2>错题本 PDF 排版</h2>
 
@@ -540,7 +808,7 @@ body {
 
         <div class="add-question-btn" onclick="addQuestion()">+ 添加题目</div>
 
-        <button class="btn-primary" id="genPdfBtn" onclick="generatePDF()" style="margin-top: 16px;">生成 PDF</button>
+        <button class="btn-primary" id="genPdfBtn" onclick="enterPrintPreview()" style="margin-top: 16px;">打印预览</button>
     </div>
 
     <div class="preview-area" id="previewArea">
@@ -577,7 +845,9 @@ function createQuestion() {
         showGrammar: false,
         grammarPoint: '',
         forceNewPage: false,
-        keyPointLines: 3
+        keyPointLines: 3,
+        correctAnswer: '',
+        wrongReason: ''
     };
 }
 
@@ -716,6 +986,25 @@ function toggleCard(id) {
     });
 }
 
+function switchMobileView(view) {
+    const sidebar = document.getElementById('sidebar');
+    const preview = document.getElementById('previewArea');
+    const buttons = document.querySelectorAll('#mobileBar .mobile-tab-btn');
+    if (view === 'edit') {
+        document.body.classList.remove('print-preview');
+        sidebar.classList.remove('hidden-mobile');
+        preview.classList.add('hidden-mobile');
+        buttons[0].classList.add('active');
+        buttons[1].classList.remove('active');
+    } else {
+        sidebar.classList.add('hidden-mobile');
+        preview.classList.remove('hidden-mobile');
+        buttons[0].classList.remove('active');
+        buttons[1].classList.add('active');
+        enterPrintPreview();
+    }
+}
+
 function escHtml(text) {
     if (!text) return '';
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -759,6 +1048,13 @@ function updateQuestion(id, field, value) {
     if (q) {
         q[field] = value;
         renderPreview();
+    }
+}
+
+function saveQuestionField(id, field, value) {
+    const q = questions.find(q => q.id === id);
+    if (q) {
+        q[field] = value;
     }
 }
 
@@ -833,6 +1129,16 @@ function moduleBox(num, label, content) {
     </div>`;
 }
 
+function moduleSection(num, label, content) {
+    return `<div class="module-section">
+        <div class="module-header">
+            <div class="module-number">${num}</div>
+            <div class="module-label">${label}</div>
+        </div>
+        ${content}
+    </div>`;
+}
+
 function linedArea(lines) {
     let html = '<div class="lined-area">';
     for (let i = 0; i < lines; i++) {
@@ -842,32 +1148,123 @@ function linedArea(lines) {
     return html;
 }
 
+function blankArea(lines, areaId) {
+    const height = lines * 30;
+    return `<div class="blank-area" id="${areaId}" style="height:${height}px;">
+        <div class="resize-handle" onmousedown="startResize(event,'${areaId}')" ontouchstart="startResize(event,'${areaId}')"></div>
+    </div>`;
+}
+
+function editableArea(lines, areaId, qId, field, value, colorClass, placeholder) {
+    const height = lines * 30;
+    return `<div class="blank-area" id="${areaId}" style="height:${height}px;">
+        <textarea class="editable-input ${colorClass}" placeholder="${placeholder}" oninput="saveQuestionField(${qId}, '${field}', this.value)">${escHtml(value)}</textarea>
+        <div class="resize-handle" onmousedown="startResize(event,'${areaId}')" ontouchstart="startResize(event,'${areaId}')"></div>
+    </div>`;
+}
+
+function startResize(e, targetId) {
+    e.preventDefault();
+    const el = document.getElementById(targetId);
+    const isTouch = e.type === 'touchstart';
+    const startY = isTouch ? e.touches[0].clientY : e.clientY;
+    const startH = el.offsetHeight;
+
+    function onMove(ev) {
+        const clientY = isTouch ? ev.touches[0].clientY : ev.clientY;
+        const newH = Math.max(30, startH + clientY - startY);
+        el.style.height = newH + 'px';
+    }
+
+    function onUp() {
+        if (isTouch) {
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onUp);
+        } else {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+    }
+
+    if (isTouch) {
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onUp);
+    } else {
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    }
+}
+
+function startAreaResize(e, qId) {
+    e.preventDefault();
+    const q = questions.find(q => q.id === qId);
+    const el = document.getElementById(`qarea-${qId}`);
+    const isTouch = e.type === 'touchstart';
+    const startY = isTouch ? e.touches[0].clientY : e.clientY;
+    const startH = el.offsetHeight;
+
+    function onMove(ev) {
+        const clientY = isTouch ? ev.touches[0].clientY : ev.clientY;
+        const newH = Math.max(60, startH + clientY - startY);
+        el.style.height = newH + 'px';
+    }
+
+    function onUp() {
+        if (isTouch) {
+            document.removeEventListener('touchmove', onMove);
+            document.removeEventListener('touchend', onUp);
+        } else {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+        }
+        if (q) {
+            q.imageHeight = el.offsetHeight;
+        }
+    }
+
+    if (isTouch) {
+        document.addEventListener('touchmove', onMove, { passive: false });
+        document.addEventListener('touchend', onUp);
+    } else {
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+    }
+}
+
 function renderQuestionHTML(q) {
-    let html = '<div class="question-block">';
+    let sections = [];
     let n = 1;
 
     // 1. 原题 - always present
     if (q.image) {
-        html += moduleBox(n++, '原题', `<img class="question-image" src="${q.image}" style="max-height:${q.imageHeight}px;">`);
+        sections.push(moduleSection(n++, '原题',
+            `<div class="resizable-area" id="qarea-${q.id}" style="height:${q.imageHeight}px;">
+                <img class="question-image" src="${q.image}" style="max-height:100%;">
+                <div class="resize-handle" onmousedown="startAreaResize(event,${q.id})" ontouchstart="startAreaResize(event,${q.id})"></div>
+            </div>`));
     } else {
-        html += moduleBox(n++, '原题', `<div class="image-placeholder" style="height:${q.imageHeight}px;">[题目图片区域]</div>`);
+        sections.push(moduleSection(n++, '原题',
+            `<div class="image-placeholder resizable-area" id="qarea-${q.id}" style="height:${q.imageHeight}px;">
+                [题目图片区域]
+                <div class="resize-handle" onmousedown="startAreaResize(event,${q.id})" ontouchstart="startAreaResize(event,${q.id})"></div>
+            </div>`));
     }
 
-    // 2. 正确答案 - always present, lined area only
-    const correctLines = (q.qtype === 'application') ? 5 : 1;
-    html += moduleBox(n++, '正确答案', linedArea(correctLines));
+    // 2. 正确答案 - editable blank area
+    const correctLines = (q.qtype === 'application') ? 8 : 1;
+    sections.push(moduleSection(n++, '正确答案', editableArea(correctLines, 'blank-correct-' + q.id, q.id, 'correctAnswer', q.correctAnswer, 'correct-color', '输入正确答案...')));
 
-    // 3. 错因分析 - optional
+    // 3. 错因分析 - optional, editable blank area
     if (q.showWrongReason) {
-        html += moduleBox(n++, '错因分析', linedArea(1));
+        sections.push(moduleSection(n++, '错因分析', editableArea(2, 'blank-reason-' + q.id, q.id, 'wrongReason', q.wrongReason, 'reason-color', '输入错因分析...')));
     }
 
     // 5. 考点分析 - optional
     if (q.showKeyPoint) {
         if (q.keyPoint) {
-            html += moduleBox(n++, '考点分析', `<div class="answer-text">${esc(q.keyPoint)}</div>`);
+            sections.push(moduleSection(n++, '考点分析', `<div class="answer-text">${esc(q.keyPoint)}</div>`));
         } else {
-            html += moduleBox(n++, '考点分析', linedArea(q.keyPointLines));
+            sections.push(moduleSection(n++, '考点分析', linedArea(q.keyPointLines)));
         }
     }
 
@@ -883,17 +1280,17 @@ function renderQuestionHTML(q) {
             }
         });
         if (simHtml) {
-            html += moduleBox(n++, '举一反三', simHtml);
+            sections.push(moduleSection(n++, '举一反三', simHtml));
         }
     }
 
     // 7. 核心语法 - optional (English only)
     if (globalSettings.subject === 'english' && q.showGrammar && q.grammarPoint) {
-        html += moduleBox(n++, '核心语法', `<div class="grammar-box">${esc(q.grammarPoint)}</div>`);
+        sections.push(moduleSection(n++, '核心语法', `<div class="grammar-box">${esc(q.grammarPoint)}</div>`));
     }
 
-    html += '</div>';
-    return html;
+    const inner = sections.join('<div class="module-divider"></div>');
+    return `<div class="question-block"><div class="question-wrapper">${inner}</div></div>`;
 }
 
 function esc(text) {
@@ -980,33 +1377,85 @@ function renderPreview() {
     });
 }
 
+// ===== Print Preview =====
+function enterPrintPreview() {
+    document.body.classList.add('print-preview');
+    const preview = document.getElementById('previewArea');
+    const sidebar = document.getElementById('sidebar');
+    if (window.innerWidth < 768) {
+        sidebar.classList.add('hidden-mobile');
+        preview.classList.remove('hidden-mobile');
+        // Scale A4 pages to fit screen width using zoom
+        const pages = document.querySelectorAll('.a4-page');
+        const scale = Math.min(1, (window.innerWidth - 16) / 946);
+        pages.forEach(page => {
+            page.dataset.originalZoom = page.style.zoom || '';
+            page.style.zoom = scale;
+        });
+    }
+    window.scrollTo(0, 0);
+}
+
+function exitPrintPreview() {
+    document.body.classList.remove('print-preview');
+    if (window.innerWidth < 768) {
+        switchMobileView('edit');
+        // Reset A4 page zoom
+        const pages = document.querySelectorAll('.a4-page');
+        pages.forEach(page => {
+            page.style.zoom = page.dataset.originalZoom || '';
+        });
+    }
+}
+
+function browserPrint() {
+    window.print();
+}
+
+function downloadPDF() {
+    generatePDF();
+}
+
 // ===== PDF Generation =====
 function generatePDF() {
     const btn = document.getElementById('genPdfBtn');
-    btn.disabled = true;
-    btn.textContent = '生成中...';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = '生成中...';
+    }
 
     const pages = document.querySelectorAll('.a4-page');
     if (pages.length === 0) {
         alert('没有内容可生成');
-        btn.disabled = false;
-        btn.textContent = '生成 PDF';
+        if (btn) { btn.disabled = false; btn.textContent = '打印预览'; }
         return;
     }
+
+    // Hide blank-area borders for PDF capture
+    const blankAreas = document.querySelectorAll('.blank-area');
+    const savedBorders = [];
+    blankAreas.forEach(el => {
+        savedBorders.push(el.style.border);
+        el.style.border = 'none';
+    });
 
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF('p', 'mm', 'a4');
 
+    function finish() {
+        blankAreas.forEach((el, i) => { el.style.border = savedBorders[i]; });
+        if (btn) { btn.disabled = false; btn.textContent = '打印预览'; }
+    }
+
     function processPage(idx) {
         if (idx >= pages.length) {
             pdf.save('错题本.pdf');
-            btn.disabled = false;
-            btn.textContent = '生成 PDF';
+            finish();
             return;
         }
 
         html2canvas(pages[idx], {
-            scale: 2.5,
+            scale: window.innerWidth < 768 ? 1.5 : 2.5,
             useCORS: true,
             backgroundColor: '#ffffff',
             logging: false
@@ -1017,8 +1466,7 @@ function generatePDF() {
             processPage(idx + 1);
         }).catch(err => {
             alert('生成失败：' + err.message);
-            btn.disabled = false;
-            btn.textContent = '生成 PDF';
+            finish();
         });
     }
 
